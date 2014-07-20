@@ -11,4 +11,4 @@ for root, dirnames, filenames in os.walk(os.getcwd()):	# fails
 		globStr = "%s/*.c*" % dirname
 		matches.append(Glob(globStr))
 
-env.SharedLibrary('tardis', matches)
+env.SharedLibrary('../bin/tardis', matches)
