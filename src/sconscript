@@ -1,0 +1,14 @@
+import os
+import fnmatch
+
+Import('env')
+
+matches = []
+for root, dirnames, filenames in os.walk(os.getcwd()):	# fails
+	for dirname in dirnames:
+		print('adding dir to path %s' % dirname)
+		env.Append(CPPPATH=[dirname])
+		globStr = "%s/*.c*" % dirname
+		matches.append(Glob(globStr))
+
+env.SharedLibrary('tardis', matches)
