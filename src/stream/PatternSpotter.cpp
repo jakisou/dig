@@ -21,9 +21,9 @@
 #include "SpringSpotter.hpp"
 
 PatternSpotter::PatternSpotter(Template const& ref, SpotterParams const& p):
+	mTime(0),
 	mLabel(ref.label),
 	M(ref.nSamples),
-	mTime(0),
 	dMin(INFINITY),
 	ts(kINVALID),
 	te(kINVALID),
@@ -36,9 +36,9 @@ PatternSpotter::PatternSpotter(Template const& ref, SpotterParams const& p):
 }
 
 PatternSpotter::PatternSpotter(const PatternSpotter& other):
+	mTime(other.mTime),
 	mLabel(other.mLabel),
 	M(other.M),
-	mTime(other.mTime),
 	dMin(other.dMin),
 	ts(other.ts),
 	te(other.te),
@@ -52,12 +52,12 @@ PatternSpotter::PatternSpotter(const PatternSpotter& other):
 
 //PatternSpotter& PatternSpotter::operator=(const PatternSpotter& other) {
 //	if (this == &other) return *this;
-//	
+//
 //	if (M != other.M) {
 //		refData = (data_t *)realloc(refData, other.M*sizeof(data_t));
 //	}
 //	array_copy(other.refData, refData, other.M);
-//	
+//
 //	mLabel = other.mLabel;
 //	M = other.M;
 //	nDims = other.nDims;
@@ -70,7 +70,7 @@ PatternSpotter::PatternSpotter(const PatternSpotter& other):
 
 //void swap(PatternSpotter& first, PatternSpotter& second) {
 //	using std::swap;
-//	
+//
 //	swap(
 //}
 
@@ -86,7 +86,7 @@ PatternSpotter* createPatternSpotter(Template const& seq, SpotterParams const& p
 	// 2) duplicating the reportCriteria code in each case
 
 	SpotterParams p = params;
-	
+
 	switch(p.spotType) {
 		case EDW_OPTIMAL:
 			p.reportCriteria = CAUTIOUS;	//TODO should be OPTIMAL

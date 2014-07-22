@@ -26,21 +26,21 @@ tick_t WindowSpotter::sBufferUpdatedTime = -1;
 
 WindowSpotter::WindowSpotter(Template const& ref, SpotterParams const& p):
 	PatternSpotter(ref, p),
+	mCurrentDist(INFINITY),
 	mEpochCounter(0),
-	mLastMatchEndTime(-1),
 	mSumX(0),
 	mSumX2(0),
 	mMaxWindowLen(M),
 	mMinWindowLen(M),
-	mCurrentDist(INFINITY)
+	mLastMatchEndTime(-1)
 {
 	ensureBufferLongEnough(mMaxWindowLen);
 	mOrder = new idx_t[M];
 	mSortedY = new data_t[M];
-	
+
 	// normalize reference data (query)
 	znormalize(refData, M);
-	
+
 	// create sorted version of reference data
 	array_copy(refData, mSortedY, M);
 	sort_abs_decreasing(mSortedY, mOrder, M);
@@ -48,13 +48,13 @@ WindowSpotter::WindowSpotter(Template const& ref, SpotterParams const& p):
 
 WindowSpotter::WindowSpotter(const WindowSpotter& other):
 	PatternSpotter(other),
+	mCurrentDist(other.mCurrentDist),
 	mEpochCounter(other.mEpochCounter),
-	mLastMatchEndTime(other.mLastMatchEndTime),
 	mSumX(other.mSumX),
 	mSumX2(other.mSumX2),
 	mMaxWindowLen(other.mMaxWindowLen),
 	mMinWindowLen(other.mMinWindowLen),
-	mCurrentDist(other.mCurrentDist)
+	mLastMatchEndTime(other.mLastMatchEndTime)
 {
 	ensureBufferLongEnough(mMaxWindowLen);
 	mOrder	 = (idx_t*)	realloc(mOrder,		other.M*sizeof(idx_t));
@@ -80,7 +80,7 @@ inline void WindowSpotter::ensureBufferLongEnough(idx_t len) {
 
 inline void WindowSpotter::resetBufferIfNeeeded(tick_t currentTime) {
 	if (currentTime == 0 && (WindowSpotter::sBufferUpdatedTime > 0) ) {
-		
+
 //		printf("reseting buffer: current time, static time = %ld, %ld\n",
 //			   currentTime, WindowSpotter::sBufferUpdatedTime);
 		circBuffer_reset(WindowSpotter::sBuff);
@@ -99,21 +99,21 @@ inline void WindowSpotter::updateBuffer(tick_t time, data_t x) {
 void WindowSpotter::updateMatrix(const tick_t t, const data_t* sample, data_t cutoff) {
 	mTime = t;
 	data_t x = *sample;		//TODO don't assume 1D input
-	
+
 //	printf("--------, t=%ld, x=%.2f\n", t, x);
-	
+
 	// add data to buffer if another WindowSpotter hasn't already
 	updateBuffer(t,x);
-	
+
 	// update running statistics
 	mSumX += x;
 	mSumX2 += x*x;
 	mEpochCounter++;
-	
+
 	// let child classes do preprocessing before calling the distance
 	// function
 	onDataReceived(t,x);
-	
+
 	// if don't have enough data to fill the sliding window yet, just return
 	tick_t dataStartIdx = t - mMinWindowLen + 1;
 	if (dataStartIdx < 0) return;
@@ -121,7 +121,7 @@ void WindowSpotter::updateMatrix(const tick_t t, const data_t* sample, data_t cu
 	// pick out most recent data in buffer
 	data_t *dataEnd = WindowSpotter::sBuff->head;
 	data_t* dataStart = dataEnd - mMinWindowLen + 1;
-	
+
 	// if the running sums have taken in too many points, reset them
 	// fresh to avoid floating point errors
 	if (mEpochCounter >= kRESET_SUMS_AFTER) {
@@ -129,23 +129,23 @@ void WindowSpotter::updateMatrix(const tick_t t, const data_t* sample, data_t cu
 		mSumX2 = array_sum_squared(dataStart,mMinWindowLen);
 		mEpochCounter = 0;
 	}
-	
+
 	// compute mean and standard deviation for normalization
 	mMeanX = mSumX / mMinWindowLen;
 	mStdX = mSumX2 / mMinWindowLen;
 	mStdX = sqrt(mStdX - mMeanX*mMeanX);
 	if (mStdX == 0) mStdX = DBL_MIN;	//don't divide by 0
-	
+
 	// if we just found a match, then we can't report subsequences that
 	// overlap with that match
 	tick_t latestPossibleStartTime = t - mMinWindowLen + 1;
 	if (latestPossibleStartTime > mLastMatchEndTime) {
-		
+
 		double localCutoff = denormalize(cutoff);
 		double bsf = dMin < localCutoff ? dMin : localCutoff;
 //		double bsf = dMin == INFINITY ? localCutoff : dMin;
 //		double bsf = dMin;
-		
+
 		// if we could report a non-overlaping subsequence, see if a good
 		// one (ie, one with dist less that of the best one found so far) is present
 		mCurrentDist = computeDistance(dataEnd, t, mLastMatchEndTime, mMeanX, mStdX, bsf);
@@ -155,7 +155,7 @@ void WindowSpotter::updateMatrix(const tick_t t, const data_t* sample, data_t cu
 			mCurrentDist = INFINITY;
 		}
 	}
-	
+
 	// subtract off points that just exited the sliding window
 	data_t oldX = *(dataStart);
 	mSumX -= oldX;
@@ -185,17 +185,17 @@ void WindowSpotter::purgeAllOverlap(Subsequence seq) {
 	mLastMatchEndTime = seq.te;
 	dMin = INFINITY;
 //	mCurrentDist = INFINITY;
-	
+
 	// recalculate distance without overlap
 	data_t *dataEnd = WindowSpotter::sBuff->head;
 	mCurrentDist = computeDistance(dataEnd, mTime, mLastMatchEndTime,
 								   mMeanX, mStdX, dMin);
-	
+
 //	printf("called purgeAllOverlap; currentStartTime = %ld, seqEndTime = %ld\n",
 //		   getCurrentStartTime(), mLastMatchEndTime);
 //	if (getCurrentStartTime() > mLastMatchEndTime) {
 //		printf("reset mCurrentDist\n");
-//		
+//
 //		// recalculate distance
 //		data_t *dataEnd = WindowSpotter::sBuff->head;
 //		mCurrentDist = computeDistance(dataEnd, mTime, mLastMatchEndTime,

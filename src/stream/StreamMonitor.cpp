@@ -23,15 +23,13 @@ static inline data_t harmonic_mean(data_t a, data_t b) {
 }
 
 StreamMonitor::StreamMonitor(SpotterParams p):
-	mNumDims(p.nDims),
 	mSignalMonitors(),
-//	mCurrentBestSequences(p.nDims),
 	mTick(-1),
+	mNumDims(p.nDims),
 	mTotalRefsLen(0),
 	mSpotterParams(p),
 	mMode(kDEFAULT_STREAM_MONITOR_MODE)
 {
-//	mCurrentBestSeq.dist = INFINITY;
 	SignalMonitor * mon;
 	for (int i = 0; i < mNumDims; i++) {
 		mon = new SignalMonitor(p);
@@ -53,13 +51,13 @@ void StreamMonitor::addTemplate(Template const& seq) {
 	data_t* signalRef;
 	for (int i = 0; i < mNumDims; i++) {
 		signalRef = signalRefs[i];
-		
+
 		Template ref;
 		ref.label = seq.label;
 		ref.data = std::vector<data_t>(signalRef,signalRef+len);
 		ref.nSamples = len;
 		ref.nDims = 1;
-		
+
 		mSignalMonitors[i]->addTemplate(ref);
 	}
 	mTotalRefsLen += len;
@@ -78,7 +76,7 @@ void StreamMonitor::updateSignalMonitors(tick_t t, data_t* sample) {
 }
 
 bool StreamMonitor::checkSequenceOptimal(Subsequence seq) {
-	
+
 	//TODO this current implementation is sort of nonsensical
 	//for multidimensional streams; if stuff isn't reported
 	//immediately, needs to determine whether a lower distance
@@ -92,7 +90,7 @@ bool StreamMonitor::checkSequenceOptimal(Subsequence seq) {
 	//anything unless the other signals' distances are guaranteed
 	//to be nonincreasing, which they aren't. We therefore need
 	//to evaluate them all simultaneously.
-	
+
 	bool optimal = true;
 	for (int i = 0; i < mSignalMonitors.size(); i++) {
 		if (optimal) {
@@ -136,12 +134,12 @@ Subsequence StreamMonitor::computeEvent(std::vector<Subsequence> seqs) {
 //	printf("computeEvent: examing seqs:\n");	//TODO remove
 	for (int i = 0; i < numSeqs; i++) {
 		seq = seqs[i];
-		
+
 //		std::cout << seq;
-		
+
 		if (seq.isValid()) {
 //			printf(", which is valid");
-			
+
 			// another signal already thinks it's found an instance of
 			// this class, so create a combined distance value
 			if (classDists.count(seq.label)) {
@@ -152,7 +150,7 @@ Subsequence StreamMonitor::computeEvent(std::vector<Subsequence> seqs) {
 				dist = seq.dist;
 			}
 			classDists[seq.label] = dist;
-			
+
 			// check if this distance beats the current best; if so,
 			// set the most likely event to this subsequence (but with
 			// the combined distance calculated above)
@@ -166,25 +164,25 @@ Subsequence StreamMonitor::computeEvent(std::vector<Subsequence> seqs) {
 //		else {
 //			printf(", which is invalid");
 //		}
-		
+
 //		std::cout << std::endl;
 	}
-	
+
 	// return the most likely event
 //	std::cout << "computeEvent: event = " << retVal << std::endl;
 	return retVal;
 }
 
 bool StreamMonitor::decideIfEvent(Subsequence seq) {
-	
+
 	// if just plain an invalid subsequence (infinite dist, meaning
 	// nothing below cutoff found), clearly not an event
 	if (! seq.isValid()) return false;
-	
+
 	// not an event if any SignalMonitor doesn't think it's optimal
 	// (and cares about optimality)
 	if (! checkSequenceOptimal(seq)) return false;
-	
+
 	// custom logic to decide whether it's an event
 	return true;	//just assume it is for now iff it's optimal
 }
@@ -197,10 +195,10 @@ void StreamMonitor::reportEvent(Subsequence seq) {
 
 Subsequence StreamMonitor::processSample(data_t* sample) {
 	mTick++;
-	
+
 	updateSignalMonitors(mTick, sample);
 	std::vector<Subsequence> seqs = getCurrentBestSubsequencesForSignals();
-	
+
 	Subsequence retVal;
 	Subsequence seq = computeEvent(seqs);
 	if (decideIfEvent(seq)) {
@@ -209,7 +207,7 @@ Subsequence StreamMonitor::processSample(data_t* sample) {
 		retVal = seq;
 //		std::cout << "==> REPORTING SEQ: " << seq << std::endl;
 	}
-	
+
 //	std::cout << "returning seq: " << retVal << std::endl;
 	return retVal;
 }
@@ -220,7 +218,7 @@ dist_calls_t StreamMonitor::getDistCallCounts() const {
 
 std::vector<Subsequence> StreamMonitor::feedStream(data_t *data, tick_t len) {
 	std::vector<Subsequence> output = std::vector<Subsequence>();
-	
+
 	// pass the StreamMonitor each sample in the data stream and record
 	// the matches it thinks it finds
 	for (tick_t t=0; t < len; t++) {
@@ -229,7 +227,7 @@ std::vector<Subsequence> StreamMonitor::feedStream(data_t *data, tick_t len) {
 //			printf("...found valid seq!\n");
 			output.push_back(seq);
 		}
-		
+
 		//abandon early if this is matching horribly and taking forever
 		if ((t & 4095) == 0 && t > 4096) {
 			dist_calls_t possible_dist_calls = mTotalRefsLen * t;
@@ -240,7 +238,7 @@ std::vector<Subsequence> StreamMonitor::feedStream(data_t *data, tick_t len) {
 			}
 		}
 	}
-	
+
 	return output;
 }
 

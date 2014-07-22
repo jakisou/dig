@@ -31,7 +31,7 @@ PrefixSpotter::PrefixSpotter(Template const& ref, SpotterParams const& p):
 	//	meanY	= new data_t[M];
 	//	Syy		= new data_t[M];
 	yStats = new RefStats[M];
-	
+
 	//initialize sufficient statistics for y
 	data_t y = refData[0];
 	data_t meanY = y;
@@ -43,21 +43,21 @@ PrefixSpotter::PrefixSpotter(Template const& ref, SpotterParams const& p):
 		y = refData[i];
 		dy = y - meanY;
 		meanY = meanY + dy/(i+1);
-		
+
 		yStats[i].deltaY = y - meanY;
 		yStats[i].Syy = yStats[i-1].Syy + dy*(yStats[i].deltaY);
 		yStats[i].deltaCoeff = (1.0f - 1.0f/(i+1));
 	}
-	
+
 	// intialize normalization factor
 	normalizationFactor = yStats[M-1].Syy; // equivalent to z-normalization + length normalization
 }
 
 PrefixSpotter::PrefixSpotter(const PrefixSpotter& other):
 	PatternSpotter(other),
+	bestPrefix(other.bestPrefix),
 	bestPrefixStartTime(other.bestPrefixStartTime),
 	bestPrefixDistance(other.bestPrefixDistance),
-	bestPrefix(other.bestPrefix),
 	minPrefixLen(other.minPrefixLen),
 	maxPrefixLen(other.maxPrefixLen)
 {
@@ -80,7 +80,7 @@ bool PrefixSpotter::sequenceLocallyOptimal(Subsequence seq) const {
 	if (mReportCriteria == AGGRESSIVE) {
 		return true;
 	}
-	
+
 	// same class -> can't change classification, so consider it
 	// optimal if this flag is set
 	if (mSameClassMeansOptimal && seq.label == mLabel) {

@@ -59,19 +59,19 @@ inline data_t inheritAndCalcDist(SubseqStats* src, SubseqStats* dest, data_t x,
 								 idx_t n) {
 	//store calls to distance function for profiling
 	global_dist_calls++;
-	
+
 	//compute updated stats
 	data_t dx = x - src->meanX;
 	dest->Sxy = src->Sxy + dx*deltaY;
 	dest->Sxx = src->Sxx + dx * dx * deltaCoeff;
 	dest->meanX = src->meanX + dx / n;
-	
+
 	//ensure that inherited value will be sensible before (possibly) abandoning
 	dest->S = src->S;
 	dest->H = 0;
 
 	data_t beta1 = dest->Sxy / dest->Sxx;
-	
+
 	// For linear regression, Y = b1*X + b0 + error; don't allow
 	// negative b1, since this means Y resembles -X, not X. Since
 	// b1 = Sxy / Sxx and Sxx is nonnegative, we can just check Sxy.
@@ -107,10 +107,10 @@ DDWSpotter::DDWSpotter(Template const& ref, SpotterParams const& p):
 	A = new SubseqStats[M];
 	D = new data_t[M];
 //	yStats = new RefStats[M];
-	
+
 	// initially, no indices valid
 	memset(validityFlags, 0, (M+1)*sizeof(uint8_t));
-	
+
 	// bundle up the arrays of y statistics into a single array
 	// of structs for better spatial locality
 //	for (idx_t i = 0; i < M; i++) {
@@ -119,14 +119,14 @@ DDWSpotter::DDWSpotter(Template const& ref, SpotterParams const& p):
 //		yStats[i].deltaCoeff = (1.0f - 1.0f/(i+1));
 //	}
 //	printf("DDWSpotter has maxWarp of %d\n", maxWarp);
-	
+
 	prevHighestValidIdx = 0;
 }
 
 DDWSpotter::DDWSpotter(const DDWSpotter& other):
 	PrefixSpotter(other),
-	maxWarp(other.maxWarp),
-	prevHighestValidIdx(other.prevHighestValidIdx)
+	prevHighestValidIdx(other.prevHighestValidIdx),
+	maxWarp(other.maxWarp)
 {
 	validityFlags	=(uint8_t*) realloc(validityFlags, (other.M+1)*sizeof(uint8_t));
 	A		   = (SubseqStats*) realloc(A,			other.M*sizeof(SubseqStats));
@@ -160,16 +160,16 @@ void DDWSpotter::updateMatrix(const tick_t t, const data_t* sample,
 	float deltaCoeff;
 	idx_t highestValidIdx = 0;
 	mTime = t;
-	
+
 #ifdef TRACK_PREFIX_DISTS
 	bestPrefixDistance = INFINITY;
 #endif
-	
+
 	// -------------------------------
 	// compute necessary scalars
 	// -------------------------------
 	data_t x = *sample;
-	
+
 	//determine normalized cutoff from raw cutoff
 	data_t cutoff = denormalize(rawCutoff);
 
@@ -183,7 +183,7 @@ void DDWSpotter::updateMatrix(const tick_t t, const data_t* sample,
 	// Initialize final distance
 	// -------------------------------
 	D[M-1] = INFINITY;
-	
+
 	// -------------------------------
 	// Initialize index 0
 	// -------------------------------
@@ -193,7 +193,7 @@ void DDWSpotter::updateMatrix(const tick_t t, const data_t* sample,
 	D[0] = 0;
 	validityFlags[0] = DIST_VALID;
 	validityFlags[1] |= NEW_DIAG_VALID;
-	
+
 #ifndef ABANDON_NEG_SXX_SXY 	//Sxx always 0, so vert dist undefined
 	if (maxWarp > 0) {
 		validityFlags[1] |= VERT_VALID;
@@ -204,20 +204,20 @@ void DDWSpotter::updateMatrix(const tick_t t, const data_t* sample,
 	// Main loop: compute indices 1 to M-1
 	// -------------------------------
 	for (idx_t i = 1; i < M; i++) {
-		
+
 		// if can't inherit from any direction, go to next idx;
 		// repeat until a possibly valid idx
 		if (! (validityFlags[i] & POSSIBLY_VALID_MASK) ) {
 			validityFlags[i] = validityFlags[i] >> VALIDITY_SHIFT;
 //			global_idx_skips++;
-			
+
 			// if past the last index that could possibly be valid (which
 			// is the one diagonally above the last one that was valid at
 			// the previous time step), we're done for this time step
 			if (i > prevHighestValidIdx+1) {
 				break;
 			}
-			
+
 			while (i < M-1) {
 				if (validityFlags[i+1] & POSSIBLY_VALID_MASK) {
 					Adiag = A[i];
@@ -230,12 +230,12 @@ void DDWSpotter::updateMatrix(const tick_t t, const data_t* sample,
 			}
 			continue;
 		}
-		
+
 		// store the stats that were at this index at the previous
 		// time step so the next index can have them for diagonal
 		// inheritance
 		Ahorz = A[i];
-		
+
 		// check if we can inherit horizontally; horizontal inheritance
 		// doesn't changes the stats, so we don't need to compute anything
 		if (validityFlags[i] & HORZ_VALID) {
@@ -244,7 +244,7 @@ void DDWSpotter::updateMatrix(const tick_t t, const data_t* sample,
 		} else {
 			dBest = INFINITY;
 		}
-		
+
 		if (validityFlags[i] & (DIAG_VALID | VERT_VALID) ) {
 			// get y stats for this index if we can
 			// inherit vertically or diagonally
@@ -253,7 +253,7 @@ void DDWSpotter::updateMatrix(const tick_t t, const data_t* sample,
 			n = i+1;
 //			deltaCoeff = 1.0f - 1.0f / n;
 			deltaCoeff = yStats[i].deltaCoeff;	//actually faster to lookup...
-			
+
 			// check diagonal inheritance
 			if (validityFlags[i] & DIAG_VALID) {
 				d = inheritAndCalcDist(&Adiag, &stats, x, deltaY, Syy, deltaCoeff, n);
@@ -262,7 +262,7 @@ void DDWSpotter::updateMatrix(const tick_t t, const data_t* sample,
 					A[i] = stats;
 				}
 			}
-			
+
 			// check vertical inheritance, making sure to reset the vertical
 			// warping constraint unless we actually do inherit vertically
 			if (validityFlags[i] & VERT_VALID) {
@@ -297,9 +297,9 @@ void DDWSpotter::updateMatrix(const tick_t t, const data_t* sample,
 				validityFlags[i+1] |= VERT_VALID;
 			}
 			validityFlags[i+1] |= NEW_DIAG_VALID;
-			
+
 			highestValidIdx = i;
-			
+
 #ifdef TRACK_PREFIX_DISTS
 			if (i+1 >= minPrefixLen && prefixDist < bestPrefixDistance) {
 				bestPrefix = i;
@@ -308,10 +308,10 @@ void DDWSpotter::updateMatrix(const tick_t t, const data_t* sample,
 			}
 #endif
 		}
-		
+
 		// store the stats that the next index could inherit diagonally
 		Adiag = Ahorz;
-		
+
 		// conceptually, we maintain two arrays that describe which
 		// directions it's valid to inherit from at the current time
 		// step and next time step; in practice, we just maintain one
@@ -321,7 +321,7 @@ void DDWSpotter::updateMatrix(const tick_t t, const data_t* sample,
 		// time step at this index
 		validityFlags[i] = validityFlags[i] >> VALIDITY_SHIFT;
 	}
-		
+
 	prevHighestValidIdx = highestValidIdx;
 }
 
@@ -335,7 +335,7 @@ void DDWSpotter::purgeAllOverlap(tick_t tstart, tick_t tend) {
 
 void DDWSpotter::purgeInferiorOverlap(tick_t tstart, tick_t tend, data_t dist) {
 	idx_t i;
-	
+
 	// if no overlap at all, don't have to worry about distance
 	for (i=0; i < M; i++) {
 		if ( idxValidAt(i) && A[i].S <= tend) {
@@ -344,12 +344,12 @@ void DDWSpotter::purgeInferiorOverlap(tick_t tstart, tick_t tend, data_t dist) {
 			break;
 		}
 	}
-	
+
 	// once start times overlap, all future start times will also overlap
 	if (dist <= 0) {
 		// if can't possibly beat dist, just invalidate everything
 		memset(&validityFlags[i], 0, (M+1-i)*sizeof(uint8_t));
-		
+
 		// it's possible that the first index we purged could inherit
 		// diagonally at the next time step
 		if ( i > 0 && idxValidAt(i-1) ) {
@@ -363,7 +363,7 @@ void DDWSpotter::purgeInferiorOverlap(tick_t tstart, tick_t tend, data_t dist) {
 			}
 		}
 	}
-	
+
 	//if final index isn't valid after purge, ensure dist of infinity is stored
 	if (! idxValidAt(M-1) ) {
 		D[M-1] = INFINITY;

@@ -79,17 +79,17 @@ typedef struct Stream: public Sequence {
 /** Struct to bundle together key parameters for a PatternSpotter */	//TODO make this a class instead
 typedef struct SpotterParams {
 	SpotterType spotType;			///< The SpotterType to use
+	ReportCriteria reportCriteria;	///< The criteria used to determine whether to report potential matches
 	data_t cutoff;					///< The distance cutoff for nearest-neighbor comparisons
 	steps_t maxWarp;				///< The maximum amount of time warping
 	float scaleFactor;				///< The maximum uniform scaling scale factor
 	float timeMatchThresh;			///< How much tolerance there is in subsequences overlapping to still "match"
 	dims_t nDims;					///< The number of dimensions in the stream
-	ReportCriteria reportCriteria;	///< The criteria used to determine whether to report potential matches
-	
+
 	SpotterParams(SpotterType spotType			=kSPOTPARAMS_DEFAULT_SPOTTER_TYPE,
 				  ReportCriteria reportCriteria	=kSPOTPARAMS_DEFAULT_REPORT_CRITERIA,
 				  data_t cutoff					=kSPOTPARAMS_DEFAULT_CUTOFF,
-				  steps_t maxWarp					=kSPOTPARAMS_DEFAULT_WARP,
+				  steps_t maxWarp				=kSPOTPARAMS_DEFAULT_WARP,
 				  float scaleFactor				=kSPOTPARAMS_DEFAULT_SCALE_FACTOR,
 				  float timeMatchThresh			=kSPOTPARAMS_DEFAULT_TIME_MATCH_THRESH,
 				  dims_t nDims					=kSPOTPARAMS_DEFAULT_DIMENSIONS);
