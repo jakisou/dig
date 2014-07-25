@@ -3,7 +3,7 @@ libraries 		= []
 library_paths 	= ''
 cppDefines 		= {'VERSION': 1}
 cppFlags 		= ['-Wall']#, '-Werror']
-cxxFlags 		= ['-std=c++11']
+cxxFlags 		= ['-std=c++0x']#['-std=c++11']
 
 # Let's define a common build environment first...
 env = Environment()
