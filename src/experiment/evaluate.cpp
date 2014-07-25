@@ -80,30 +80,30 @@ TestResult runSweep(SweepParams s) {
 	// so the loops don't terminate prematurely
 	s.maxCutoff += kFP_ERROR;
 	s.maxScaleFactor += kFP_ERROR;
-	
+
 	TestResult bestSoFar;
 	bestSoFar.setPrecision(0);
 	bestSoFar.setRecall(0);
-	
+
 	for (scaleFactor = s.minScaleFactor; scaleFactor <= s.maxScaleFactor;
 		 scaleFactor += s.scaleFactorIncrement) {
 		for (warp = s.minWarp; warp <= s.maxWarp; warp += s.warpIncrement) {
 			for (cutoff = s.minCutoff; cutoff <= s.maxCutoff; cutoff += s.cutoffIncrement) {
 				printf("Running Test at Cutoff=%.3f, Warp=%d, ScaleFactor=%.3f\n",
 					   cutoff, warp, scaleFactor);
-				
+
 				std::vector<TestResult> results =
 					runTestsInDir(s.dirName, s.spotType, cutoff, warp, scaleFactor);
-				
+
 				if (results.size() > 0) {
 					TestResult res = results.back();	//TODO only supports one test per dir at the moment
-					
+
 					// check if a new best test result (as determine by accuracy)
 					// is produced by these parameters
 					if (res.getF1score() > bestSoFar.getF1score()) {
 						bestSoFar = res;
 					}
-					
+
 					// early abandon sweep when just testing *awful* parameters
 					if (cutoff > .4 && bestSoFar.getF1score() > 0 && res.pruningPower > gAbandonAbovePruningPower) {
 						break;
@@ -130,7 +130,7 @@ std::vector<TestResult> runSweepsInSubDirs(SweepParams s) {
 	std::string parentDir = s.dirName;
 	ensureTrailingSlash(&parentDir);
 	std::vector<std::string> subdirs = getFileNamesInDir(parentDir);
-	
+
 	//run all the tests in each subdirectory
 	std::vector<TestResult> allResults = std::vector<TestResult>();
 	for (int i = 0; i < subdirs.size(); i++) {
@@ -139,7 +139,7 @@ std::vector<TestResult> runSweepsInSubDirs(SweepParams s) {
 		s.dirName = subdir;
 		allResults.push_back(runSweep(s));
 	}
-	
+
 	// store best parameters
 	std::string paramsFile = generateParamsFileName(parentDir, s.spotType);
 	std::vector<SpotterParams> bestParams = std::vector<SpotterParams>();
@@ -147,7 +147,7 @@ std::vector<TestResult> runSweepsInSubDirs(SweepParams s) {
 		bestParams.push_back(allResults[i].params);
 	}
 	writeSpotterParams(paramsFile, bestParams);
-	
+
 	return allResults;
 }
 
@@ -284,7 +284,7 @@ void learnUCRStreamsParameters() {
 // -------------------------------
 
 void evaluateUCRForSpotterType(SpotterType sType) {
-	
+
 	// get the datasets for each trial
 	std::vector<std::string> ucrTestDirs = getFilePathsInDir(kUCR_TESTS_DIR);
 	long numTrials = ucrTestDirs.size();
@@ -292,15 +292,15 @@ void evaluateUCRForSpotterType(SpotterType sType) {
 		printf("ERROR: evaluateUCRUsingTrainedParams: no test sets in dir %s\n", kUCR_TESTS_DIR.c_str());
 		exit(1);
 	}
-	
+
 	std::string paramsFile = generateUCRParamsFileName(sType);
 	printf("Reading params from file: %s\n", paramsFile.c_str());
 	std::vector<SpotterParams> params = readSpotterParams(paramsFile);
-	std::vector<std::vector<TestResult>> allTrialResults(numTrials);
+	std::vector<std::vector<TestResult> > allTrialResults(numTrials);
 	for (int trial = 0; trial < numTrials; trial++) {
 		allTrialResults[trial] = runTestsInSubDirs(ucrTestDirs[trial], params);
 	}
-	
+
 	// average results from all trials
 	long numDatasets = allTrialResults[0].size();
 	std::vector<TestResult> combinedResults = std::vector<TestResult>();
@@ -312,7 +312,7 @@ void evaluateUCRForSpotterType(SpotterType sType) {
 		res *= (1.0/numTrials);
 		combinedResults.push_back(res);
 	}
-	
+
 	// store results from all trials
 	storeTestResults(kUCR_COMBINED_RESULTS_DIR, sType, combinedResults);
 }
@@ -387,7 +387,7 @@ void learnWarpedSinesParams() {
 // -------------------------------
 
 void evaluateWarpedSinesForSpotterType(SpotterType sType) {
-	
+
 	// update max pruning power before abandoning for US and SWM
 	// so that they can actually get results
 	bool changeAbandonThreshold = sType == US_AGGRESSIVE ||
@@ -399,18 +399,18 @@ void evaluateWarpedSinesForSpotterType(SpotterType sType) {
 		origAbandonThreshold = gAbandonAbovePruningPower;
 		gAbandonAbovePruningPower = 20.0;
 	}
-	
+
 	// read in best parameters
 	std::string paramsFile = generateWarpedSinesParamsFileName(sType);
 	printf("Reading params from file: %s\n", paramsFile.c_str());
 	std::vector<SpotterParams> params = readSpotterParams(paramsFile);
-	
+
 	// search datasets using best parameters
 	std::vector<TestResult> results = runTestsInSubDirs(kMASKED_SINES_DIR, params);
-	
+
 	// store results
 	storeTestResults(kMASKED_SINES_RESULTS_DIR, sType, results);
-	
+
 	//restore original max pruning power if necessary
 	if (changeAbandonThreshold) {
 		gAbandonAbovePruningPower = origAbandonThreshold;
@@ -430,15 +430,15 @@ void evaluateWarpedSinesUsingTrainedParams() {
 //================================
 
 void evaluateDatasetsForSpotterType(SpotterType sType, std::string testDir, std::string resultsDir) {
-	
+
 	// read in best parameters
 	std::string paramsFile = generateParamsFileName(testDir, sType);
 	printf("Reading params from file: %s\n", paramsFile.c_str());
 	std::vector<SpotterParams> params = readSpotterParams(paramsFile);
-	
+
 	// search dataset using best parameters
 	std::vector<TestResult> results = runTestsInSubDirs(testDir, params);
-	
+
 	// store results
 	storeTestResults(resultsDir, sType, results);
 }
@@ -484,13 +484,13 @@ std::string generateMotifTimingFileName(SpotterParams p, std::string streamName,
 	std::string fileName(kTIMING_DIR);
 	ensureTrailingSlash(&fileName);
 	ensureDirExists(fileName);			//timingDir/
-	
+
 	fileName.append(streamName);
 	ensureTrailingSlash(&fileName);
 	ensureDirExists(fileName);			//timingDir/streamName
-	
+
 	fileName.append(concat(SpotterType_toString(p.spotType), ".csv"));
-	
+
 //	std::ostringstream oss;
 //	oss << SpotterType_toString(p.spotType) << "_" << minLen << "_" << maxLen << ".csv";
 //	fileName.append(oss.str());			//timingDir/streamName/SpotType_minLen_maxLen.csv
@@ -520,7 +520,7 @@ TestResult buildMotifTestResult(TwoMotif motif, long cpuTime_ms,
 		precision = numMatches / numSubseqs;
 		recall = numMatches / numAnswers;
 	}
-	
+
 	// create a results object
 	TestResult res;
 	res.name = concat(minMotifLen, maxMotifLen, ", ");	//hack to store motif min + max len
@@ -538,11 +538,11 @@ void storeMotifSearchResult(TwoMotif motif, long cpuTime_ms,
 							length_t minMotifLen, length_t maxMotifLen) {
 	// create a TestResult object
 	TestResult res = buildMotifTestResult(motif, cpuTime_ms, p, dataStream, minMotifLen, maxMotifLen);
-	
+
 	// bundle up the object in a vector to store
 	std::vector<TestResult> results;
 	results.push_back(res);
-	
+
 	// store the results
 	std::string resultsFile = generateMotifTimingFileName(p.spotType, dataStream.name, minMotifLen, maxMotifLen);
 	writeTestResults(resultsFile, results);
@@ -574,17 +574,17 @@ inline long msSince(clock_t start) {
 void findMotifInStreamAndStoreResult(SpotterParams p, std::string streamDir, int minMotifLen, int maxMotifLen) {
 	int numDims = 1;
 	Stream dataStream = readStreamFromDir(streamDir, numDims);
-	
+
 	// initialize timing
 	global_dist_calls = 0;	//reset calls to dist function
 	clock_t start = clock();
-	
+
 	// run the motif search
 	TwoMotif motif = findMotifInStream(p, dataStream, minMotifLen, maxMotifLen);
-	
+
 	// stop timing
 	long time_ms = msSince(start);
-	
+
 	// store the result
 	storeMotifSearchResult(motif, time_ms, p, dataStream, minMotifLen, maxMotifLen);
 }
@@ -598,33 +598,33 @@ void findMotifInStreamAndStoreResult(SpotterType sType, std::string streamDir, i
 void searchForMotifUntilFound(SpotterParams p, std::string streamDir, int minMotifLen, int maxMotifLen) {
 	int numDims = 1;
 	Stream dataStream = readStreamFromDir(streamDir, numDims);
-	
+
 	// basic input validation
 	long numAnswers = dataStream.patterns.size();
 	if (numAnswers != 2) {
 		printf("ERROR: searchForMotifUntilFound: number of answers %ld != 2\n", numAnswers);
 		exit(1);
 	}
-	
+
 	// create correct motif
 	TwoMotif answers;
 	answers.first = dataStream.patterns[0];
 	answers.second = dataStream.patterns[1];
-	
+
 	// initialize timing
 	global_dist_calls = 0;	//reset calls to dist function
 	clock_t start = clock();
-	
+
 	// carry out the search
 	TwoMotif motif = searchMotifLensUntilFound(p, &dataStream.data[0],
 											   dataStream.data.size(),
 											   minMotifLen, maxMotifLen,
 											   answers);
 	printMotif(motif);
-	
+
 	// stop timing
 	long time_ms = msSince(start);
-	
+
 	// store the result
 	storeMotifSearchResult(motif, time_ms, p, dataStream, minMotifLen, maxMotifLen);
 }
