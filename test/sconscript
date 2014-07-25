@@ -9,14 +9,14 @@ env = env.Clone()
 for root, dirnames, filenames in os.walk('../src'):
 	for dirname in dirnames:
 		dirPath = os.path.join('../src',dirname)
-		print('adding src dir to path: %s' % dirPath)
+		# print('adding src dir to path: %s' % dirPath)
 		env.Append(CPPPATH=[dirPath])
 
 matches = []
 
 # add the current directory in case there are files in it
 currentDir = os.path.split(os.getcwd())[1]
-print('adding test dir to path: %s' % currentDir)
+# print('adding test dir to path: %s' % currentDir)
 env.Append(CPPPATH=['.'])
 matches.append(Glob("./*.c*"))
 
@@ -24,15 +24,20 @@ matches.append(Glob("./*.c*"))
 # parent dirs to the include path
 for root, dirnames, filenames in os.walk(os.getcwd()):
 	for dirname in dirnames:
-		print('adding test dir to path: %s' % dirname)
+		# dirname = os.path.abspath(dirname)
+		# print('adding test dir to path: %s' % dirname)
 		env.Append(CPPPATH=[dirname])
 		globStr = "%s/*.c*" % dirname
 		matches.append(Glob(globStr))
 
-print('test env CPPPATH:')
-print(env['CPPPATH'])
+# print('test env CPPPATH:')
+# print(env['CPPPATH'])
 
-print("test files to build: ")
-print([ match[0].rstr() for match in matches])
+# print("test files to build: ")
+# print([ match[0].rstr() for match in matches])
+
+# use absolute src paths for Xcode integration
+env['CXXCOM'] = env['CXXCOM'].replace('$SOURCES', '${SOURCES.abspath}')
+env['CCCOM']  = env['CCCOM'].replace('$SOURCES', '${SOURCES.abspath}')
 
 env.Program('../bin/main', matches, LIBS=['tardis'], LIBPATH='../bin/')

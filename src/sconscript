@@ -6,9 +6,14 @@ Import('env')
 matches = []
 for root, dirnames, filenames in os.walk(os.getcwd()):	# fails
 	for dirname in dirnames:
-		print('adding dir to path %s' % dirname)
+		# dirname = os.path.abspath(dirname)
+		# print('adding dir to path %s' % dirname)
 		env.Append(CPPPATH=[dirname])
 		globStr = "%s/*.c*" % dirname
 		matches.append(Glob(globStr))
+
+# use absolute src paths for Xcode integration
+env['CXXCOM'] = env['CXXCOM'].replace('$SOURCES', '${SOURCES.abspath}')
+env['CCCOM']  = env['CCCOM'].replace('$SOURCES', '${SOURCES.abspath}')
 
 env.SharedLibrary('../bin/tardis', matches)
