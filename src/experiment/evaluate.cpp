@@ -394,7 +394,7 @@ void evaluateWarpedSinesForSpotterType(SpotterType sType) {
 		sType == US_CAUTIOUS ||
 		sType == SWM_AGGRESSIVE ||
 		sType == SWM_CAUTIOUS;
-	double origAbandonThreshold;
+	double origAbandonThreshold = -1;
 	if (changeAbandonThreshold) {
 		origAbandonThreshold = gAbandonAbovePruningPower;
 		gAbandonAbovePruningPower = 20.0;
