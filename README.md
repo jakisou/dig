@@ -4,28 +4,28 @@ Tardis: A Time Series Data Mining Toolkit
 An in-progress library for pattern recognition and discovery in temporal data. Includes, (or soon will include, as of 7/2014):
 
 ### Distance measures
-	- Euclidean
-	- Dynamic Time Warping
-	- Uniform Scaling
-	- Scaled Warped Matching
+- Euclidean
+- Dynamic Time Warping
+- Uniform Scaling
+- Scaled Warped Matching
 
 ### Subsequence search
-	- Sliding window (with any distance measure)
-	- SPRING
+- Sliding window (with any distance measure)
+- SPRING
 
 ### Pattern Discovery
-	- Brute force (any subsequence search algorithm)
-	- Data dictionaries
-	- MK motif search
-	- Fast (Logical) shapelets
+- Brute force (any subsequence search algorithm)
+- Data dictionaries
+- MK motif search
+- Fast (Logical) shapelets
 
 ### Databases
-	- Classification via any of the above distance measures
-	- iSAX-based indexing, if/when I can get authors' code
+- Classification via any of the above distance measures
+- iSAX-based indexing, if/when I can get authors' code
 
 ### Discretization
-	- SAX
-	- iSAX
+- SAX
+- iSAX
 
 
 ## Building
