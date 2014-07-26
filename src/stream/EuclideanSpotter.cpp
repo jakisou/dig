@@ -6,6 +6,7 @@
 //  Copyright (c) 2013 __MyCompanyName__. All rights reserved.
 //
 
+#include <string.h>
 #include "EuclideanSpotter.hpp"
 #include "Subsequence.hpp"
 #include "basic_structs.hpp"

@@ -7,6 +7,7 @@
 //
 
 #include <stdlib.h>
+#include <string.h>
 #include "PrefixSpotter.hpp"
 #include "Subsequence.hpp"
 #include "basic_structs.hpp"

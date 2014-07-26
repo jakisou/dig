@@ -8,6 +8,7 @@
 
 #include <math.h>
 #include <float.h>
+#include <string.h>
 #include "WindowSpotter.hpp"
 #include "Subsequence.hpp"
 #include "circBuffer.h"

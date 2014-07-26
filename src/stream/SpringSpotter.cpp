@@ -6,6 +6,7 @@
 //  Copyright (c) 2014 University of <Anonymous>. All rights reserved.
 //
 
+#include <string.h>
 #include "SpringSpotter.hpp"
 #include "global_test_vals.h"
 
