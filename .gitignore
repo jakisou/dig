@@ -32,3 +32,6 @@ build/
 
 # Doxygen documentation
 docs/
+
+# XCode UI state
+*.xcuserdatad*
