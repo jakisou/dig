@@ -7,6 +7,7 @@
 //
 
 #include <stdio.h>
+#include <string.h>
 #include "DDWSpotter.hpp"
 #include "Subsequence.hpp"
 #include "basic_structs.hpp"

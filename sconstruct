@@ -2,9 +2,9 @@
 libraries 		= []
 library_paths 	= ''
 cppDefines 		= {'VERSION': 1}
-cFlags 			= ['-std=c99']
-cppFlags 		= ['-Wall']#, '-Werror']
-cxxFlags 		= ['-std=c++0x']#['-std=c++11']
+cFlags 			= ['-std=c99','-Wall']
+cppFlags 		= []
+cxxFlags 		= ['-std=c++0x','-Wall']
 
 # Let's define a common build environment first...
 env = Environment()
