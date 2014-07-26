@@ -1,5 +1,3 @@
-[![Build Status](https://travis-ci.org/dblalock/tardis.svg?branch=master)](https://travis-ci.org/dblalock/tardis)
-
 Tardis: A Time Series Data Mining Toolkit
 =========================================
 
@@ -46,3 +44,5 @@ If you're on a Mac and want to use Xcode for development, just open up the Xcode
 - Distance measure and subsequence search code are pure C (or very close) for easy porting to embedded platforms. The biggest thing you'll need to change is replacing the mallocs and file IO with static arrays.
 - Nothing in this library is thread-safe and, compiler magic aside, it makes no use of the machine's GPU. These are on the list for future work.
 - Python wrappers also coming soon.
+
+[![Build Status](https://travis-ci.org/dblalock/tardis.svg?branch=master)](https://travis-ci.org/dblalock/tardis)
