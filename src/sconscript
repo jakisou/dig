@@ -16,4 +16,4 @@ for root, dirnames, filenames in os.walk(os.getcwd()):	# fails
 env['CXXCOM'] = env['CXXCOM'].replace('$SOURCES', '${SOURCES.abspath}')
 env['CCCOM']  = env['CCCOM'].replace('$SOURCES', '${SOURCES.abspath}')
 
-env.SharedLibrary('../bin/tardis', matches)
+env.SharedLibrary('../bin/dig', matches)

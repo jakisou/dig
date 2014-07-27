@@ -40,4 +40,4 @@ for root, dirnames, filenames in os.walk(os.getcwd()):
 env['CXXCOM'] = env['CXXCOM'].replace('$SOURCES', '${SOURCES.abspath}')
 env['CCCOM']  = env['CCCOM'].replace('$SOURCES', '${SOURCES.abspath}')
 
-env.Program('../bin/main', matches, LIBS=['tardis'], LIBPATH='../bin/')
+env.Program('../bin/main', matches, LIBS=['dig'], LIBPATH='../bin/')
